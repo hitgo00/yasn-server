@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
+  password: { type: String, required: true },
   clubs: [String],
 
   picUrl: String,
