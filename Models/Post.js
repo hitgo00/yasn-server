@@ -2,9 +2,11 @@ const mongoose = require("mongoose");
 
 const postSchema = new mongoose.Schema({
   creator: {
+    // required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  creatorEmail: String,
   imageUrl: String,
   videoUrl: String,
   title: {

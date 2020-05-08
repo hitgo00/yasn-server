@@ -15,10 +15,15 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20,
   },
-  password: { type: String, required: true },
-  clubs: [String],
+  //   password: { type: String, required: true },
+
+  clubsNumber: Number,
 
   picUrl: String,
+  gitHubUrl: String,
+  linkedInUrl: String,
+  instaUrl: String,
+  clubsComm: [String],
 
   joined: {
     type: Date,

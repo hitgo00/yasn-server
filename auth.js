@@ -15,6 +15,7 @@ module.exports = (passport) => {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: "/googleauth/callback",
+        // callbackURL: "https://yasn.now.sh",
       },
 
       (token, refreshToken, profile, done) => {
@@ -25,6 +26,7 @@ module.exports = (passport) => {
           });
           //    done(new Error("Invalid host domain"));
         }
+        // console.log(JSON.stringify(profile));
         return done(null, {
           profile: profile,
           token: token,

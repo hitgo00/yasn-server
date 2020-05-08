@@ -11,15 +11,21 @@
     "cookie-parser": "^1.4.5",
     "cookie-session": "^1.4.0",
     "cors": "^2.8.5",
+    "destroyer": "^0.0.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "googleapis": "^49.0.0",
     "helmet": "^3.22.0",
     "http": "^0.0.1-security",
     "mongoose": "^5.9.11",
     "morgan": "^1.10.0",
+    "open": "^7.0.3",
     "passport": "^0.4.1",
     "passport-google-oauth": "^2.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "server-destroy": "^1.0.1",
+    "universal-cookie-express": "^4.0.3",
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.3"
