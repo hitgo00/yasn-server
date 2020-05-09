@@ -4,12 +4,12 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
+// const path = require("path");
 
-const passport = require("passport");
+// const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
-const auth = require("./auth");
+
 const User = require("./Models/User");
 
 const Post = require("./Models/Post");
@@ -57,8 +57,8 @@ app.use(
 app.use(cookieParser());
 
 //setting up passport for Auth
-auth(passport);
-app.use(passport.initialize());
+// auth(passport);
+// app.use(passport.initialize());
 
 app.get("/", (req, res) => {
   if (req.session.token) {
