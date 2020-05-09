@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.5",
