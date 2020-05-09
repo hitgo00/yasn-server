@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   //   password: { type: String, required: true },
 
   clubsNumber: Number,
-
+  bio: String,
   picUrl: String,
   gitHubUrl: String,
   linkedInUrl: String,
