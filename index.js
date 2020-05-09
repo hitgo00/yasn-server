@@ -39,7 +39,8 @@ app.use(morgan("tiny"));
 app.use(helmet());
 
 // CORS
-app.use(cors({ origin: ["http://localhost:3000", "https://yasn.now.sh"] }));
+app.use(cors());
+// app.use(cors({ origin: ["http://localhost:3000", "https://yasn.now.sh"] }));
 
 const server = http.createServer(app);
 
