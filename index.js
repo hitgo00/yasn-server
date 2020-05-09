@@ -97,6 +97,10 @@ app.post("/adduser", (req, res) => {
     instaUrl: req.body.instaUrl,
     clubsComm: req.body.tags,
   };
+  User.find({ username: req.body.username }, (err, user) => {
+    console.log(err);
+    user.length !== 0 ? res.send("username already taken") : null;
+  });
 
   User.create(newUser)
     .then((res) => console.log(res))
@@ -215,6 +219,27 @@ app.post("/handlelike", async (req, res) => {
     console.log(updatedPost);
   }
 
+  res.send("success");
+});
+
+app.post("/addcomment", (req, res) => {
+  Post.updateOne(
+    { _id: req.body.postId },
+    {
+      $push: {
+        comments: {
+          commentBy: req.body.userId,
+          comment: req.body.comment,
+          username: req.body.username,
+          name: req.body.name,
+        },
+      },
+    }
+  )
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((err) => console.log(err));
   res.send("success");
 });
 

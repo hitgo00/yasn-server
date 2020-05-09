@@ -30,6 +30,8 @@ const postSchema = new mongoose.Schema({
         },
         date: { type: Date, default: Date.now },
         comment: String,
+        username: String,
+        name: String,
       },
     ],
   },
