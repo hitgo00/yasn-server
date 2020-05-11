@@ -4,15 +4,13 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const cors = require("cors");
-// const path = require("path");
-
-// const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 
+//importing Models
 const User = require("./Models/User");
-
 const Post = require("./Models/Post");
+
 // DotENV config
 require("dotenv").config();
 
@@ -57,24 +55,7 @@ app.use(
 );
 app.use(cookieParser());
 
-//setting up passport for Auth
-// auth(passport);
-// app.use(passport.initialize());
-
-app.get("/", (req, res) => {
-  if (req.session.token) {
-    res.cookie("token", req.session.token);
-    res.json({
-      status: "session cookie set",
-    });
-  } else {
-    res.cookie("token", "");
-    res.json({
-      status: "session cookie not set",
-    });
-  }
-});
-
+//Routes
 app.get("/checkprofile", (req, res) => {
   const email = req.query.email;
   User.find({ email }, (err, user) => {
@@ -114,7 +95,7 @@ app.get("/profile", (req, res) => {
   const email = req.query.email;
   User.find({ email })
     .populate("posts")
-    // .sort({ posts: { date: -1 } })
+
     .exec((err, user) => {
       if (err) {
         console.log(err);
@@ -127,7 +108,7 @@ app.get("/username", (req, res) => {
   const username = req.query.username;
   User.find({ username })
     .populate("posts")
-    // .sort({ posts: { date: -1 } })
+
     .exec((err, user) => {
       if (err) {
         console.log(err);
@@ -153,8 +134,9 @@ app.get("/home", (req, res) => {
 
 app.post("/addpost", async (req, res) => {
   const email = req.query.email;
-  let userId;
+
   let postId;
+  let userId;
   await User.findOne({ email }, (err, user) => {
     if (err) console.log(err);
     userId = user._id;
