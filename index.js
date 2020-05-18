@@ -136,12 +136,14 @@ app.post("/addpost", async (req, res) => {
   const email = req.query.email;
 
   let postId;
-  let userId;
-  await User.findOne({ email }, (err, user) => {
-    if (err) console.log(err);
-    userId = user._id;
-    console.log(userId);
-  });
+  let userId = req.body.currentUserId;
+  if (!userId) {
+    await User.findOne({ email }, (err, user) => {
+      if (err) console.log(err);
+      userId = user._id;
+      console.log(userId);
+    });
+  }
 
   const newPost = {
     creatorEmail: email,
