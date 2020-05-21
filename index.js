@@ -190,7 +190,7 @@ app.post("/handlelike", async (req, res) => {
   const liked = req.body.liked;
   console.log(postId);
 
-  if (liked) {
+  if (liked && userId) {
     updatedPost = await Post.updateOne(
       { _id: postId },
       { $push: { "likes.likers": userId } }
