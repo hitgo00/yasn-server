@@ -1,44 +1,44 @@
-const express = require("express");
-const http = require("http");
-const morgan = require("morgan");
-const helmet = require("helmet");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const cookieSession = require("cookie-session");
+const express = require('express');
+const http = require('http');
+const morgan = require('morgan');
+const helmet = require('helmet');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 
 //importing Models
-const User = require("./Models/User");
-const Post = require("./Models/Post");
+const User = require('./Models/User');
+const Post = require('./Models/Post');
 
 // DotENV config
-require("dotenv").config();
+require('dotenv').config();
 
 // Declaring the express app
 const app = express();
 
 // Connecting to Database
-const dbUrl = process.env.DB_URL || "";
-const dbName = process.env.DB_NAME || "";
+const dbUrl = process.env.DB_URL || '';
+const dbName = process.env.DB_NAME || '';
 mongoose
   .connect(dbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName,
   })
-  .then(() => console.log("Connected to MongoDB..."))
-  .catch((error) => console.log("MongoDB Error:\n", error));
-mongoose.set("useCreateIndex", true);
+  .then(() => console.log('Connected to MongoDB...'))
+  .catch((error) => console.log('MongoDB Error:\n', error));
+mongoose.set('useCreateIndex', true);
 
 // Morgan for logging requests
-app.use(morgan("tiny"));
+app.use(morgan('tiny'));
 
 // A little security using helmet
 app.use(helmet());
 
 // CORS
 app.use(cors());
-// app.use(cors({ origin: ["http://localhost:3000", "https://yasn.now.sh"] }));
+app.use(cors({ origin: ['http://localhost:3000', 'https://yasn.now.sh'] }));
 
 const server = http.createServer(app);
 
@@ -49,14 +49,14 @@ app.use(express.urlencoded({ extended: true }));
 //Cookie middlewares
 app.use(
   cookieSession({
-    name: "session",
-    keys: ["#secretKey"],
+    name: 'session',
+    keys: ['#secretKey'],
   })
 );
 app.use(cookieParser());
 
 //Routes
-app.get("/checkprofile", (req, res) => {
+app.get('/checkprofile', (req, res) => {
   const email = req.query.email;
   User.find({ email }, (err, user) => {
     console.log(err);
@@ -65,7 +65,7 @@ app.get("/checkprofile", (req, res) => {
   });
 });
 
-app.post("/adduser", (req, res) => {
+app.post('/adduser', (req, res) => {
   console.log(req.cookies);
   console.log(req.body.name);
   const newUser = {
@@ -81,20 +81,20 @@ app.post("/adduser", (req, res) => {
   };
   User.find({ username: req.body.username }, (err, user) => {
     console.log(err);
-    user.length !== 0 ? res.send("username already taken") : null;
+    user.length !== 0 ? res.send('username already taken') : null;
   });
 
   User.create(newUser)
     .then((res) => console.log(res))
     .catch((err) => console.log(err));
 
-  res.send("success");
+  res.send('success');
 });
 
-app.get("/profile", (req, res) => {
+app.get('/profile', (req, res) => {
   const email = req.query.email;
   User.find({ email })
-    .populate("posts")
+    .populate('posts')
 
     .exec((err, user) => {
       if (err) {
@@ -104,10 +104,10 @@ app.get("/profile", (req, res) => {
     });
 });
 
-app.get("/username", (req, res) => {
+app.get('/username', (req, res) => {
   const username = req.query.username;
   User.find({ username })
-    .populate("posts")
+    .populate('posts')
 
     .exec((err, user) => {
       if (err) {
@@ -118,12 +118,12 @@ app.get("/username", (req, res) => {
     });
 });
 
-app.get("/home", (req, res) => {
+app.get('/home', (req, res) => {
   const tag = req.query.tag;
 
   Post.find(tag ? { tags: tag } : {})
     .sort({ date: -1 })
-    .populate("creator")
+    .populate('creator')
     .exec((err, posts) => {
       if (err) {
         console.log(err);
@@ -132,7 +132,7 @@ app.get("/home", (req, res) => {
     });
 });
 
-app.post("/addpost", async (req, res) => {
+app.post('/addpost', async (req, res) => {
   const email = req.query.email;
 
   let postId;
@@ -165,7 +165,7 @@ app.post("/addpost", async (req, res) => {
     .catch((err) => console.log(err));
 
   await Post.findOne({ _id: postId })
-    .populate("creator")
+    .populate('creator')
     .exec((err, post) => {
       if (err) return handleError(err);
       console.log(post);
@@ -179,10 +179,10 @@ app.post("/addpost", async (req, res) => {
   );
   console.log(updatedUser);
 
-  res.send("successfully added post");
+  res.send('successfully added post');
 });
 
-app.post("/handlelike", async (req, res) => {
+app.post('/handlelike', async (req, res) => {
   let updatedPost;
 
   const postId = req.query._id;
@@ -193,21 +193,21 @@ app.post("/handlelike", async (req, res) => {
   if (liked && userId) {
     updatedPost = await Post.updateOne(
       { _id: postId },
-      { $push: { "likes.likers": userId } }
+      { $push: { 'likes.likers': userId } }
     );
     console.log(updatedPost);
   } else {
     updatedPost = await Post.updateOne(
       { _id: req.query._id },
-      { $pull: { "likes.likers": userId } }
+      { $pull: { 'likes.likers': userId } }
     );
     console.log(updatedPost);
   }
 
-  res.send("success");
+  res.send('success');
 });
 
-app.post("/addcomment", (req, res) => {
+app.post('/addcomment', (req, res) => {
   Post.updateOne(
     { _id: req.body.postId },
     {
@@ -225,7 +225,7 @@ app.post("/addcomment", (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send("success");
+  res.send('success');
 });
 
 const port = process.env.PORT || 4848;
