@@ -1,4 +1,5 @@
 const express = require('express');
+const socket = require('socket.io');
 const http = require('http');
 const morgan = require('morgan');
 const helmet = require('helmet');
@@ -6,10 +7,17 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
+const indexRoutes = require('./routes/index');
+const controllers = require('./controllers/index');
+const toxicity = require('@tensorflow-models/toxicity');
+
+// tfjs node backend intialization
+require('@tensorflow/tfjs-node');
 
 //importing Models
-const User = require('./Models/User');
-const Post = require('./Models/Post');
+const User = require('./models/User');
+const Post = require('./models/Post');
+const Room = require('./models/room');
 
 // DotENV config
 require('dotenv').config();
@@ -38,7 +46,7 @@ app.use(helmet());
 
 // CORS
 app.use(cors());
-app.use(cors({ origin: ['http://localhost:3000', 'https://yasn.now.sh'] }));
+// app.use(cors({ origin: ['http://localhost:3000', 'https://yasn.now.sh'] }));
 
 const server = http.createServer(app);
 
@@ -227,6 +235,69 @@ app.post('/addcomment', (req, res) => {
     .catch((err) => console.log(err));
   res.send('success');
 });
+
+//Darkrai chat part
+
+// Creating the socket
+const io = socket(server);
+
+// Users count for each room
+const rooms = {};
+
+io.sockets.on('connection', function (socket) {
+  console.log('Connection Established ', socket.id);
+  socket.on('add_user', async function (data) {
+    socket.username = data.username;
+    socket.room = data.website;
+
+    const roomExist = await Room.exists({ website: socket.room });
+
+    if (roomExist) {
+      socket.join(socket.room);
+    } else {
+      controllers.addRoom(socket.room);
+
+      socket.join(socket.room);
+    }
+
+    if (!rooms[data.website]) {
+      rooms[data.website] = 1;
+    } else {
+      rooms[data.website]++;
+    }
+    console.log('Number of users in', socket.room, ':', rooms[socket.room]);
+  });
+
+  socket.on('send_message', (data) => {
+    // tfjs toxicity model prediction
+    toxicity.load().then((model) => {
+      model.classify(data.message).then((predictions) => {
+        if (predictions[predictions.length - 1].results[0].match) {
+          console.log('Toxic message detected. Deleting now...');
+          io.sockets.in(socket.room).emit('delete_message', {
+            message: data.message,
+          });
+          controllers.updateMessage(data.message);
+        }
+      });
+    });
+
+    controllers.addMessage(socket.username, data.message, data.website);
+    io.sockets.in(socket.room).emit('receive_message', {
+      username: socket.username,
+      message: data.message,
+    });
+  });
+
+  socket.on('Disconnect', (data) => {
+    console.log('User Disconnected');
+    rooms[data.website]--;
+    console.log('Number of users in', socket.room, ':', rooms[socket.room]);
+  });
+});
+
+// Specifying routes
+app.use('/darkrai', indexRoutes);
 
 const port = process.env.PORT || 4848;
 

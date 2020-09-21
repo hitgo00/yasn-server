@@ -4,10 +4,14 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon index.js",
     "start": "node index.js"
   },
   "dependencies": {
+    "@tensorflow-models/toxicity": "^1.2.2",
+    "@tensorflow/tfjs-converter": "^2.4.0",
+    "@tensorflow/tfjs-core": "^2.4.0",
+    "@tensorflow/tfjs-node": "^2.4.0",
     "cookie-parser": "^1.4.5",
     "cookie-session": "^1.4.0",
     "cors": "^2.8.5",
@@ -24,6 +28,7 @@
     "passport-google-oauth": "^2.0.0",
     "path": "^0.12.7",
     "server-destroy": "^1.0.1",
+    "socket.io": "^2.3.0",
     "universal-cookie-express": "^4.0.3",
     "url": "^0.11.0"
   },
