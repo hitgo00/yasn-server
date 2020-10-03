@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { OAuth2Client } = require('google-auth-library');
 const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const indexRoutes = require('./routes/index');
@@ -62,6 +63,40 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+const client_id = process.env.GOOGLE_CLIENT_ID;
+
+//Google_Auth_Client
+const client = new OAuth2Client(client_id);
+
+//Auth Token verification middleware
+app.use((req, res, next) => {
+  let email;
+  async function verify() {
+    const ticket = await client.verifyIdToken({
+      idToken: req.query.googleToken,
+      audience: client_id, // Specify the CLIENT_ID of the app that accesses the backend
+      // Or, if multiple clients access the backend:
+      //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+    const userid = payload['sub'];
+    const domain = payload['hd'];
+    email = payload['email'];
+  }
+  verify()
+    .then(() => {
+      if (email !== req.query.email) {
+        throw new Error('Invalid Email');
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.send('invalid token');
+    });
+});
 
 //Routes
 app.get('/checkprofile', (req, res) => {
