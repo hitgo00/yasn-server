@@ -5,8 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js",
-    "build": "node index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "@tensorflow-models/toxicity": "^1.2.2",
