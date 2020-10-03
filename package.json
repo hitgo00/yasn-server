@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "build": "node --optimize_for_size --max_old_space_size=4600 index.js"
+    "build": "node index.js"
   },
   "dependencies": {
     "@tensorflow-models/toxicity": "^1.2.2",
