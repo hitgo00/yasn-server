@@ -64,10 +64,12 @@ app.use(
 );
 app.use(cookieParser());
 
-const client_id = process.env.GOOGLE_CLIENT_ID;
+const web_client_id = process.env.WEB_GOOGLE_CLIENT_ID;
+const ios_client_id = process.env.IOS_GOOGLE_CLIENT_ID;
+const android_client_id = process.env.ANDROID_GOOGLE_CLIENT_ID;
 
 //Google_Auth_Client
-const client = new OAuth2Client(client_id);
+const client = new OAuth2Client(web_client_id);
 
 //Auth Token verification middleware
 app.use((req, res, next) => {
@@ -75,7 +77,7 @@ app.use((req, res, next) => {
   async function verify() {
     const ticket = await client.verifyIdToken({
       idToken: req.query.googleToken,
-      audience: client_id, // Specify the CLIENT_ID of the app that accesses the backend
+      audience: [web_client_id, ios_client_id, android_client_id], // Specify the CLIENT_ID of the app that accesses the backend
       // Or, if multiple clients access the backend:
       //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
     });
