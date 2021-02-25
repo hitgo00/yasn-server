@@ -164,16 +164,25 @@ app.get('/username', (req, res) => {
 });
 
 app.get('/home', (req, res) => {
-  const tag = req.query.tag;
+    // destructure page and limit and set default values
+    const { page = 1, limit = 10, tag } = req.query;
 
   Post.find(tag ? { tags: tag } : {})
     .sort({ date: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
     .populate('creator')
     .exec((err, posts) => {
       if (err) {
-        console.log(err);
+        res.json(err);
       }
-      res.send(posts);
+      Post.countDocuments({}).exec((count_err, count)=>{
+        if(count_err){
+          res.json(count_err);
+        }
+        res.json({posts, total: count, page });
+      })
+      
     });
 });
 
