@@ -32,4 +32,6 @@ const userSchema = new mongoose.Schema({
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 });
 
+userSchema.index({name:"text"});
+
 module.exports = mongoose.model("User", userSchema);

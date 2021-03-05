@@ -1,46 +1,46 @@
-const express = require('express');
-const socket = require('socket.io');
-const http = require('http');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const { OAuth2Client } = require('google-auth-library');
-const cookieParser = require('cookie-parser');
-const cookieSession = require('cookie-session');
-const indexRoutes = require('./routes/index');
-const controllers = require('./controllers/index');
-const toxicity = require('@tensorflow-models/toxicity');
+const express = require("express");
+const socket = require("socket.io");
+const http = require("http");
+const morgan = require("morgan");
+const helmet = require("helmet");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const { OAuth2Client } = require("google-auth-library");
+const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
+const indexRoutes = require("./routes/index");
+const controllers = require("./controllers/index");
+const toxicity = require("@tensorflow-models/toxicity");
 
 // tfjs node backend intialization
-require('@tensorflow/tfjs-node');
+require("@tensorflow/tfjs-node");
 
 //importing Models
-const User = require('./models/User');
-const Post = require('./models/Post');
-const Room = require('./models/room');
+const User = require("./models/User");
+const Post = require("./models/Post");
+const Room = require("./models/room");
 
 // DotENV config
-require('dotenv').config();
+require("dotenv").config();
 
 // Declaring the express app
 const app = express();
 
 // Connecting to Database
-const dbUrl = process.env.DB_URL || '';
-const dbName = process.env.DB_NAME || '';
+const dbUrl = process.env.DB_URL || "";
+const dbName = process.env.DB_NAME || "";
 mongoose
   .connect(dbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName,
   })
-  .then(() => console.log('Connected to MongoDB...'))
-  .catch((error) => console.log('MongoDB Error:\n', error));
-mongoose.set('useCreateIndex', true);
+  .then(() => console.log("Connected to MongoDB..."))
+  .catch((error) => console.log("MongoDB Error:\n", error));
+mongoose.set("useCreateIndex", true);
 
 // Morgan for logging requests
-app.use(morgan('tiny'));
+app.use(morgan("tiny"));
 
 // A little security using helmet
 app.use(helmet());
@@ -58,8 +58,8 @@ app.use(express.urlencoded({ extended: true }));
 //Cookie middlewares
 app.use(
   cookieSession({
-    name: 'session',
-    keys: ['#secretKey'],
+    name: "session",
+    keys: ["#secretKey"],
   })
 );
 app.use(cookieParser());
@@ -82,26 +82,26 @@ app.use((req, res, next) => {
       //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
     });
     const payload = ticket.getPayload();
-    const userid = payload['sub'];
-    const domain = payload['hd'];
-    email = payload['email'];
+    const userid = payload["sub"];
+    const domain = payload["hd"];
+    email = payload["email"];
   }
   verify()
     .then(() => {
       if (email !== req.query.email) {
-        throw new Error('Invalid Email');
+        throw new Error("Invalid Email");
       } else {
         next();
       }
     })
     .catch((err) => {
       console.log(err);
-      res.send('invalid token');
+      res.send("invalid token");
     });
 });
 
 //Routes
-app.get('/checkprofile', (req, res) => {
+app.get("/checkprofile", (req, res) => {
   const email = req.query.email;
   User.find({ email }, (err, user) => {
     console.log(err);
@@ -110,7 +110,7 @@ app.get('/checkprofile', (req, res) => {
   });
 });
 
-app.post('/adduser', (req, res) => {
+app.post("/adduser", (req, res) => {
   console.log(req.cookies);
   console.log(req.body.name);
   const newUser = {
@@ -126,20 +126,20 @@ app.post('/adduser', (req, res) => {
   };
   User.find({ username: req.body.username }, (err, user) => {
     console.log(err);
-    user.length !== 0 ? res.send('username already taken') : null;
+    user.length !== 0 ? res.send("username already taken") : null;
   });
 
   User.create(newUser)
     .then((res) => console.log(res))
     .catch((err) => console.log(err));
 
-  res.send('success');
+  res.send("success");
 });
 
-app.get('/profile', (req, res) => {
+app.get("/profile", (req, res) => {
   const email = req.query.email;
   User.find({ email })
-    .populate('posts')
+    .populate("posts")
 
     .exec((err, user) => {
       if (err) {
@@ -149,10 +149,10 @@ app.get('/profile', (req, res) => {
     });
 });
 
-app.get('/username', (req, res) => {
+app.get("/username", (req, res) => {
   const username = req.query.username;
   User.find({ username })
-    .populate('posts')
+    .populate("posts")
 
     .exec((err, user) => {
       if (err) {
@@ -163,30 +163,59 @@ app.get('/username', (req, res) => {
     });
 });
 
-app.get('/home', (req, res) => {
-    // destructure page and limit and set default values
-    const { page = 1, limit = 10, tag } = req.query;
+app.get("/searchUsers", (req, res) => {
+  const searchString = req.query.searchString;
+  
+  if (searchString) {
+    const searchKey = new RegExp(searchString, 'i')
+    User.find({name: searchKey})
+        .limit(7)
+        .exec(function (err, results) {
+        if (err) {
+          console.log(err);
+          res.json(err);
+        }
+        res.json(results);
+      });
+    //using search
+    
+    // User.find({ $text: { $search: searchString } })
+    //   .sort({ score: { $meta: "textScore" } })
+    //   .exec(function (err, results) {
+    //     if (err) {
+    //       console.log(err);
+    //       res.json(err);
+    //     }
+    //     res.json(results);
+    //   });
+  } else {
+    res.send("Invalid search string");
+  }
+});
+
+app.get("/home", (req, res) => {
+  // destructure page and limit and set default values
+  const { page = 1, limit = 10, tag } = req.query;
 
   Post.find(tag ? { tags: tag } : {})
     .sort({ date: -1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)
-    .populate('creator')
+    .populate("creator")
     .exec((err, posts) => {
       if (err) {
         res.json(err);
       }
-      Post.countDocuments({}).exec((count_err, count)=>{
-        if(count_err){
+      Post.countDocuments({}).exec((count_err, count) => {
+        if (count_err) {
           res.json(count_err);
         }
-        res.json({posts, total: count, page });
-      })
-      
+        res.json({ posts, total: count, page });
+      });
     });
 });
 
-app.post('/addpost', async (req, res) => {
+app.post("/addpost", async (req, res) => {
   const email = req.query.email;
 
   let postId;
@@ -219,7 +248,7 @@ app.post('/addpost', async (req, res) => {
     .catch((err) => console.log(err));
 
   await Post.findOne({ _id: postId })
-    .populate('creator')
+    .populate("creator")
     .exec((err, post) => {
       if (err) return handleError(err);
       console.log(post);
@@ -233,10 +262,10 @@ app.post('/addpost', async (req, res) => {
   );
   console.log(updatedUser);
 
-  res.send('successfully added post');
+  res.send("successfully added post");
 });
 
-app.post('/handlelike', async (req, res) => {
+app.post("/handlelike", async (req, res) => {
   let updatedPost;
 
   const postId = req.query._id;
@@ -247,21 +276,21 @@ app.post('/handlelike', async (req, res) => {
   if (liked && userId) {
     updatedPost = await Post.updateOne(
       { _id: postId },
-      { $push: { 'likes.likers': userId } }
+      { $push: { "likes.likers": userId } }
     );
     console.log(updatedPost);
   } else {
     updatedPost = await Post.updateOne(
       { _id: req.query._id },
-      { $pull: { 'likes.likers': userId } }
+      { $pull: { "likes.likers": userId } }
     );
     console.log(updatedPost);
   }
 
-  res.send('success');
+  res.send("success");
 });
 
-app.post('/addcomment', (req, res) => {
+app.post("/addcomment", (req, res) => {
   Post.updateOne(
     { _id: req.body.postId },
     {
@@ -279,7 +308,7 @@ app.post('/addcomment', (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
 
 //Darkrai chat part
@@ -290,9 +319,9 @@ const io = socket(server);
 // Users count for each room
 const rooms = {};
 
-io.sockets.on('connection', function (socket) {
-  console.log('Connection Established ', socket.id);
-  socket.on('add_user', async function (data) {
+io.sockets.on("connection", function (socket) {
+  console.log("Connection Established ", socket.id);
+  socket.on("add_user", async function (data) {
     socket.username = data.username;
     socket.room = data.website;
 
@@ -311,16 +340,16 @@ io.sockets.on('connection', function (socket) {
     } else {
       rooms[data.website]++;
     }
-    console.log('Number of users in', socket.room, ':', rooms[socket.room]);
+    console.log("Number of users in", socket.room, ":", rooms[socket.room]);
   });
 
-  socket.on('send_message', (data) => {
+  socket.on("send_message", (data) => {
     // tfjs toxicity model prediction
     toxicity.load().then((model) => {
       model.classify(data.message).then((predictions) => {
         if (predictions[predictions.length - 1].results[0].match) {
-          console.log('Toxic message detected. Deleting now...');
-          io.sockets.in(socket.room).emit('delete_message', {
+          console.log("Toxic message detected. Deleting now...");
+          io.sockets.in(socket.room).emit("delete_message", {
             message: data.message,
           });
           controllers.updateMessage(data.message);
@@ -329,21 +358,21 @@ io.sockets.on('connection', function (socket) {
     });
 
     controllers.addMessage(socket.username, data.message, data.website);
-    io.sockets.in(socket.room).emit('receive_message', {
+    io.sockets.in(socket.room).emit("receive_message", {
       username: socket.username,
       message: data.message,
     });
   });
 
-  socket.on('Disconnect', (data) => {
-    console.log('User Disconnected');
+  socket.on("Disconnect", (data) => {
+    console.log("User Disconnected");
     rooms[data.website]--;
-    console.log('Number of users in', socket.room, ':', rooms[socket.room]);
+    console.log("Number of users in", socket.room, ":", rooms[socket.room]);
   });
 });
 
 // Specifying routes
-app.use('/darkrai', indexRoutes);
+app.use("/darkrai", indexRoutes);
 
 const port = process.env.PORT || 4848;
 
